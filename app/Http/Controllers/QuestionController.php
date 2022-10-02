@@ -29,10 +29,10 @@ class QuestionController extends Controller
             if(!User::where('id',$request->user_id)->first()){
                 return response(["status" => "error", "message" =>"User Type is not Define"], 401);
             }
-            $data = QuestionCategory::all();
+            $data = QuestionCategory::get();
             if($data)
             return response(["status" => true, "data" =>$data], 201);
-             }
+            }
     }
     function getsubject(Request $request){
         $rules =array(
@@ -59,7 +59,6 @@ class QuestionController extends Controller
         $rules =array(
             "user_id" => "required",
             "name" => "required",
-            "course_id" => "required",
          );
          $validator= Validator::make($request->all(),$rules);
          if($validator->fails()){
@@ -72,7 +71,6 @@ class QuestionController extends Controller
             
             $data = new QuestionCategory();
             $data->category_name = $request->name;
-            $data->course_id = $request->course_id;
             $data->save();
             if($data->save())
             return response(["status" => true, "message" =>"Category Sucessfully Created"], 201);
@@ -446,12 +444,14 @@ class QuestionController extends Controller
             if(!User::where('id',$request->user_id)->where('role','admin')->first()){
                 return response(["status" => "error", "message" =>"User Type is not Admin"], 401);
             }
-            $question = Question::all();
-            $test = Test::all();
-            $package = QuestionPackage::all();
-            $category = QuestionCategory::all();
-            $subject = QuestionSubject::all();
-            return response(["status" => true, "total_question" =>count($question),"total_test" => count($test),"total_packages"=>count($package),"total_category"=>count($category),"total_subject"=>count($subject)], 201);
+            $question = Question::count();
+            $test = Test::count();
+            $package = QuestionPackage::count();
+            $category = QuestionCategory::count();
+            $subject = QuestionSubject::count();
+            return response(["status" => true, "total_question" =>$question
+            ,"total_test" => ($test),"total_packages"=>($package),"total_category"=>($category),"total_subject"=>($subject)
+        ], 201);
              }
     }
     function getallquestion(Request $request){
@@ -466,11 +466,12 @@ class QuestionController extends Controller
             if(!User::where('id',$request->user_id)->where('role','admin')->first()){
                 return response(["status" => "error", "message" =>"User Type is not Admin"], 401);
             }
-            $question = Question::all();
+            $question = Question::paginate(5);
             $temp = array();
             foreach ($question as $key){
                 $option = QuestionOption::where('question_id',$key->id)->get();
                 // $temp1 = array();
+                $temp1 = array();
                 foreach($option as $value){
                 $temp1[] = array([
                     "option_id"=>$value->id,
@@ -479,6 +480,56 @@ class QuestionController extends Controller
                 ]);
                 }
                 $temp[] = array('question'=> $key,"option"=>$temp1);
+            }
+            return response(["status" => true, "question" =>$temp], 201);
+             }
+    }
+    function getquestiondetail(Request $request){
+        $rules =array(
+            "user_id" => "required",
+            "question_id" => "required",
+         );
+         $validator= Validator::make($request->all(),$rules);
+         if($validator->fails()){
+             return $validator->errors();
+         }
+         else{
+            if(!User::where('id',$request->user_id)->first()){
+                return response(["status" => "error", "message" =>"User Type is not Admin"], 401);
+            }
+            $question = Question::where('id',$request->question_id)->first();
+            $temp = array();
+                $option = QuestionOption::where('question_id',$question->id)->get();
+                // $temp1 = array();
+                $temp1 = array();
+                foreach($option as $value){
+                $temp1[] = array([
+                    "option_id"=>$value->id,
+                    "option" =>$value->option,
+                    "is_correct"=> $value->is_correct
+                ]);
+                }
+                $temp[] = array('question'=> $question,"option"=>$temp1);
+            
+            return response(["status" => true, "question" =>$temp], 201);
+             }
+    }
+    function getonlyquestion(Request $request){
+        $rules =array(
+            "user_id" => "required",
+         );
+         $validator= Validator::make($request->all(),$rules);
+         if($validator->fails()){
+             return $validator->errors();
+         }
+         else{
+            if(!User::where('id',$request->user_id)->where('role','admin')->first()){
+                return response(["status" => "error", "message" =>"User Type is not Admin"], 401);
+            }
+            $question = Question::all();
+            $temp = array();
+            foreach ($question as $key){ 
+                $temp[] = array('question'=> $key->question ,"question_id"=>$key->id);
             }
             return response(["status" => true, "question" =>$temp], 201);
              }

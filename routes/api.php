@@ -33,3 +33,5 @@ Route::get("/gettest",'App\Http\Controllers\QuestionController@gettest');
 Route::get("/testdetail",'App\Http\Controllers\QuestionController@testdetail'); 
 Route::get("/getstats",'App\Http\Controllers\QuestionController@getstats'); 
 Route::get("/getallquestion",'App\Http\Controllers\QuestionController@getallquestion'); 
+Route::get("/getonlyquestion",'App\Http\Controllers\QuestionController@getonlyquestion'); 
+Route::get("/getquestiondetail",'App\Http\Controllers\QuestionController@getquestiondetail'); 
