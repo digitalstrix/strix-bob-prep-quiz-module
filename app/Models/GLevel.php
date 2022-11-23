@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Question extends Model
+class GLevel extends Model
 {
     use HasFactory;
-    protected $table = "savsoft_qbank";
+    protected $table = "savsoft_level";
 }

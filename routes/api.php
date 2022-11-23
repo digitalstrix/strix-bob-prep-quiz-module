@@ -34,4 +34,6 @@ Route::get("/testdetail",'App\Http\Controllers\QuestionController@testdetail');
 Route::get("/getstats",'App\Http\Controllers\QuestionController@getstats'); 
 Route::get("/getallquestion",'App\Http\Controllers\QuestionController@getallquestion'); 
 Route::get("/getonlyquestion",'App\Http\Controllers\QuestionController@getonlyquestion'); 
-Route::get("/getquestiondetail",'App\Http\Controllers\QuestionController@getquestiondetail'); 
+Route::get("/getquestiondetail",'App\Http\Controllers\QuestionController@getquestiondetail');
+Route::post("/login",'App\Http\Controllers\QuestionController@login');
+Route::post("/register",'App\Http\Controllers\QuestionController@register');

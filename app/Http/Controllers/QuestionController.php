@@ -6,6 +6,7 @@ use App\Models\Courses;
 use App\Models\OptionSelected;
 use App\Models\Question;
 use App\Models\User;
+use Dirape\Token\Token;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\QuestionCategory;
@@ -14,6 +15,7 @@ use App\Models\QuestionSubject;
 use App\Models\QuestionOption;
 use App\Models\QuestionPackage;
 use App\Models\Test;
+use Illuminate\Support\Facades\Hash;
 
 class QuestionController extends Controller
 {
@@ -103,11 +105,8 @@ class QuestionController extends Controller
     }
     function addquestion(Request $request){
         $rules =array(
-            "user_id" => "required",
+            // "user_id" => "required",
             "question" => "required",
-            "category_id" => "required",
-            "level" => "required",
-            "subject_id" => "required",
             "option1" => "required",
             "option2" => "required",
             "option3" => "required",
@@ -119,69 +118,77 @@ class QuestionController extends Controller
              return $validator->errors();
          }
          else{
-            if(!User::where('id',$request->user_id)->where('role','admin')->first()){
-                return response(["status" => "error", "message" =>"User Type is not admin"], 401);
-            }
-            if(!QuestionCategory::where('id',$request->category_id)->first()){
-                return response(["status" => "error", "message" =>"Category Not Exist"], 401);
-            }
-            if(!QuestionSubject::where('id',$request->subject_id)->first()){
-                return response(["status" => "error", "message" =>"Subject Not Exist"], 401);
-            }
+            // if(!User::where('id',$request->user_id)->where('role','admin')->first()){
+            //     return response(["status" => "error", "message" =>"User Type is not admin"], 401);
+            // }
+            // if(!QuestionCategory::where('id',$request->category_id)->first()){
+            //     return response(["status" => "error", "message" =>"Category Not Exist"], 401);
+            // }
+            // if(!QuestionSubject::where('id',$request->subject_id)->first()){
+            //     return response(["status" => "error", "message" =>"Subject Not Exist"], 401);
+            // }
             $data = new Question();
             $data->question = $request->question;
-            $data->category_id = $request->category_id;
-            $data->subject_id = $request->subject_id;
             $data->description = $request->description;
-            $data->level = $request->level;
+            $data->model_id = $request->model;
+            $data->cid = $request->subject;
+            $data->lid = $request->level;
+            $data->tid = $request->category;    
+            $data->sscid = $request->concept;
+            $data->scid = $request->topic;
+            $data->sid = $request->source;
+            $data->mid = $request->type;
+            $data->ctid = $request->course_type;
+            $data->cid = $request->course;
+            $data->inserted_by = $request->userid;
             $data->save();
             $q_id = $data->id;
             if($request->is_correct==1){
                 $data1 = new QuestionOption();
-                $data1->question_id = $q_id;
-                $data1->option = $request->option1;
-                $data1->is_correct = '1';
+                $data1->qid = $q_id;
+                $data1->q_option = $request->option1;
+                $data1->score = '1';
                 $data1->save();
             }else{
                 $data1 = new QuestionOption();
-                $data1->question_id = $q_id;
-                $data1->option = $request->option1;
+                $data1->qid = $q_id;
+                $data1->q_option = $request->option1;
                 $data1->save();
             }
             if($request->is_correct==2){
                 $data1 = new QuestionOption();
-                $data1->question_id = $q_id;
-                $data1->option = $request->option2;
-                $data1->is_correct = '1';
+                $data1->qid = $q_id;
+                $data1->q_option = $request->option2;
+                $data1->score = '1';
                 $data1->save();
             }else{
                 $data1 = new QuestionOption();
-                $data1->question_id = $q_id;
-                $data1->option = $request->option2;
+                $data1->qid = $q_id;
+                $data1->q_option = $request->option2;
                 $data1->save();
             }
             if($request->is_correct==3){
                 $data1 = new QuestionOption();
-                $data1->question_id = $q_id;
-                $data1->option = $request->option3;
-                $data1->is_correct = '1';
+                $data1->qid = $q_id;
+                $data1->q_option = $request->option3;
+                $data1->score = '1';
                 $data1->save();
             }else{
                 $data1 = new QuestionOption();
-                $data1->question_id = $q_id;
-                $data1->option = $request->option3;
+                $data1->qid = $q_id;
+                $data1->q_option = $request->option3;
                 $data1->save();
             }
             if($request->is_correct==4){
                 $data1 = new QuestionOption();
-                $data1->question_id = $q_id;
-                $data1->option = $request->option4;
-                $data1->is_correct = '1';
+                $data1->qid = $q_id;
+                $data1->q_option = $request->option4;
+                $data1->score = '1';
                 $data1->save();
             }else{
                 $data1 = new QuestionOption();
-                $data1->question_id = $q_id;
-                $data1->option = $request->option4;
+                $data1->qid = $q_id;
+                $data1->q_option = $request->option4;
                 $data1->save();
             }
             if($data->save())
@@ -190,7 +197,7 @@ class QuestionController extends Controller
     }
     function addpackage(Request $request){
         $rules =array(
-            "user_id" => "required",
+            // "user_id" => "required",
             "package_name" => "required"
          );
          $validator= Validator::make($request->all(),$rules);
@@ -198,9 +205,9 @@ class QuestionController extends Controller
              return $validator->errors();
          }
          else{
-            if(!User::where('id',$request->user_id)->where('role','admin')->first()){
-                return response(["status" => "error", "message" =>"User Type is not admin"], 401);
-            }
+            // if(!User::where('id',$request->user_id)->where('role','admin')->first()){
+            //     return response(["status" => "error", "message" =>"User Type is not admin"], 401);
+            // }
             $data = new QuestionPackage();
             $data->package_name = $request->package_name;
             $data->save();
@@ -210,7 +217,7 @@ class QuestionController extends Controller
     }
     function addinpackage(Request $request){
         $rules =array(
-            "user_id" => "required",
+            // "user_id" => "required",
             "package_id" => "required",
             "question_id" => "required"
          );
@@ -219,16 +226,16 @@ class QuestionController extends Controller
              return $validator->errors();
          }
          else{
-            if(!User::where('id',$request->user_id)->where('role','admin')->first()){
-                return response(["status" => "error", "message" =>"User Type is not admin"], 401);
-            }
+            // if(!User::where('id',$request->user_id)->where('role','admin')->first()){
+            //     return response(["status" => "error", "message" =>"User Type is not admin"], 401);
+            // }
             if(QuestionInPackage::where('package_id',$request->package_id)->where('question_id',$request->question_id)->first()){
                 return response(["status" => "error", "message" =>"Question Already Added"], 401);
             }
             if(!QuestionPackage::where('id',$request->package_id)->first()){
                 return response(["status" => "error", "message" =>"Not a Valid Package"], 401);
             }
-            if(!Question::where('id',$request->question_id)->first()){
+            if(!Question::where('qid',$request->question_id)->first()){
                 return response(["status" => "error", "message" =>"Not a Valid Question"], 401);
             }
             $data = new QuestionInPackage();
@@ -276,7 +283,7 @@ class QuestionController extends Controller
             $data->package_id = $request->package_id;
             $data->save();
             if($data)
-            return response(["status" => true, "data" =>$data,"test_id"=>$data->id], 201);
+            return response(["status" => true, "data" =>$data,"test_id"=>$data->id], 200);
              }
     }
     function questionbypackage(Request $request){
@@ -534,5 +541,80 @@ class QuestionController extends Controller
             return response(["status" => true, "question" =>$temp], 201);
              }
     }
-    
+
+    public function login(Request $request)
+    {
+        $rules =array(
+            "email" => "required|email",
+            "password" => "required|min:6",
+            "user_type" => "required|in:student,admin",
+        );
+        $validator= Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return $validator->errors();
+        } else {
+
+            if($request->user_type=='admin'){
+                if(!User::where('email',$request->email)->where('user_type','admin')->first()){
+                    return response(["status" =>"failed", "message"=>"User is not Registered or Invaild User Type"], 401);
+                }
+                $user = User::where('email',$request->email)->first();
+                if(!Hash::check($request->password, $user->password)){
+                    return response(["status" =>"failed", "message"=>"Incorrect Password"], 401);
+                }
+            }
+            elseif($request->user_type=="student"){
+                if(!User::where('email',$request->email)->where('user_type','student')->first()){
+                    return response(["status" =>"failed", "message"=>"User is not Registered or Invaild User Type"], 401);
+                }
+                $user = User::where('email',$request->email)->first();
+                if(!Hash::check($request->password, $user->password)){
+                    return response(["status" =>"failed", "message"=>"Incorrect Password"], 401);
+                }
+        }
+            }
+            
+            if ($user){
+                $response = [
+                'user' => $user,
+                "message"=>"User is Logged IN"
+            ];
+                return response($response, 200);
+            }
+        }
+        public function register(Request $request)
+        {
+            $rules =array(
+                "name" => "required",
+                "email" => "required",
+                "password" => "required|min:6"           
+                );
+            $validator= Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return $validator->errors();
+            } else {
+                if(User::where('email',$request->email)->first()){
+                    return response(["status" =>"failed", "message"=>"Already Registered"], 401);
+                }
+                $user = new User();
+                $user->name=$request->name;
+                $user->email=$request->email;
+                $user->user_type=$request->user_type;
+                $user->password=Hash::make($request->password);
+                $token_qr = (new Token())->Unique('users', 'usertoken', 60);
+                $user->usertoken = $token_qr;
+                $result= $user->save();
+                if ($result) {
+                    $response = [
+                    'message' => 'User Created Successfully',
+                    'user' => $user,
+                ];
+                    return response($response, 200);
+                }
+                else
+                {
+                    return response(["status" =>"failed", "message"=>"User is not created"], 401);
+                }
+            }
+        }
 }

@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class QuestionOption extends Model
 {
     use HasFactory;
-    protected $table = "question_options";
+    protected $table = "savsoft_options";
 }
