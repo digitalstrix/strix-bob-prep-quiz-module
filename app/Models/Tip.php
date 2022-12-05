@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class QuestionCategory extends Model
+class Tip extends Model
 {
     use HasFactory;
-    protected $table = "savsoft_category";
+    protected $table = "gmattutor_formulas_tips";
 }

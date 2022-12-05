@@ -3,18 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Courses;
+use App\Models\GQuestion;
 use App\Models\OptionSelected;
 use App\Models\Question;
+use App\Models\QuestionServed;
 use App\Models\User;
 use Dirape\Token\Token;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\QuestionCategory;
+use App\Models\QuestionDay;
 use App\Models\QuestionInPackage;
 use App\Models\QuestionSubject;
 use App\Models\QuestionOption;
 use App\Models\QuestionPackage;
 use App\Models\Test;
+use App\Models\Tip;
+use App\Models\TipDay;
 use Illuminate\Support\Facades\Hash;
 
 class QuestionController extends Controller
@@ -282,6 +287,13 @@ class QuestionController extends Controller
             $data->user_id = $request->user_id;
             $data->package_id = $request->package_id;
             $data->save();
+            $served = QuestionInPackage::where('package_id',$request->package_id)->get();
+            foreach ($served as $served){
+                $sr = new QuestionServed();
+                $sr->test_id = $data->id;
+                $sr->question_id = $served->question_id;
+                $sr->save();
+            }
             if($data)
             return response(["status" => true, "data" =>$data,"test_id"=>$data->id], 200);
              }
@@ -338,7 +350,7 @@ class QuestionController extends Controller
             "test_id" => "required",
             "question_id" => "required",
             "option_id" => "",
-            "seconds" => "required",
+            "seconds" => "",
          );
          $validator= Validator::make($request->all(),$rules);
          if($validator->fails()){
@@ -355,15 +367,27 @@ class QuestionController extends Controller
                 return response(["status" => "error", "message" =>"Answer Already Given"], 401);
             }
             else{
+                if(QuestionServed::where('question_id', $request->question_id)->where('test_id', $request->test_id)->first()){
+                    $sr = QuestionServed::where('question_id', $request->question_id)->where('test_id', $request->test_id)->first();    
+                    $sr->is_served = 1;
+                    $sr->save();
+                }
                 $data = new OptionSelected();
                 $data->test_id = $request->test_id;
                 $data->question_id = $request->question_id;
+                $data->option_id = $request->option_id;
+                if(QuestionOption::where('oid',$request->option_id)->where('score','1')->first()){
+                    $data->is_correct = 1;
+                }else{
+                    $data->is_correct = 0;
+                }
+                $data->save();
                 // Insert in Test Table for New Entry 
                 $test = Test::where('id',$request->test_id)->first();
                 $test->total_attempt = $test->total_attempt+1;
                 $test->minutes = $test->minutes+($request->seconds)/60;
                 if(isset($request->option_id)){
-                if(QuestionOption::where('id',$request->option_id)->where('is_correct','1')->first()){
+                if(QuestionOption::where('oid',$request->option_id)->where('score','1')->first()){
                 $test->total_correct = $test->total_correct+1;
                 }else{
                 $test->total_incorrect = $test->total_incorrect+1;
@@ -373,13 +397,7 @@ class QuestionController extends Controller
                 }
                 $test->save();
             }
-            $data->option_id = $request->option_id;
-            if(QuestionOption::where('id',$request->option_id)->where('is_correct','1')->first()){
-                $data->is_correct = 1;
-            }else{
-                $data->is_correct = 0;
-            }
-            $data->save();           
+                       
             return response(["status" => true, "message" =>"Response Added Sucessfully", 201]);
              }
     }
@@ -571,7 +589,7 @@ class QuestionController extends Controller
                 if(!Hash::check($request->password, $user->password)){
                     return response(["status" =>"failed", "message"=>"Incorrect Password"], 401);
                 }
-        }
+            }
             }
             
             if ($user){
@@ -616,5 +634,110 @@ class QuestionController extends Controller
                     return response(["status" =>"failed", "message"=>"User is not created"], 401);
                 }
             }
+        }
+        function customPackage(Request $request){
+            $rules =array(
+                "user_id" => "required",
+                "cid" => "required",
+                "lid" => "required",
+                "package_name" => "required",
+                "scid" => "",
+                "sscid" => "",
+             );
+             $validator= Validator::make($request->all(),$rules);
+             if($validator->fails()){
+                 return $validator->errors();
+             }
+             else{
+                $price = QuestionCategory::where('cid',$request->cid)->first();
+                $questions = GQuestion::where('cid',$request->cid)->where('lid',$request->lid)->get();
+                if (isset($request->scid)) {
+                    $questions = Question::where('cid',$request->cid)->where('lid',$request->lid)->where('scid',$request->scid)->get();
+                    if (isset($request->sscid)) {
+                        $questions = Question::where('cid', $request->cid)->where('lid', $request->lid)->where('scid', $request->scid)->where('sscid', $request->sscid)->get();
+                    }
+                }
+            $p = new QuestionPackage();
+            $p->package_name = $request->package_name;
+            $p->userid = $request->user_id;
+            $p->price = $price->price;
+            $p->save();
+            foreach ($questions as $question) {
+                $data = new QuestionInPackage();
+                $data->package_id = $p->id;
+                $data->question_id = $question->qid;
+                $data->save();
+            }
+            return response(["status" => true, "message" =>"Custom Package Success"], 200);
+            }     
+        }
+        function addDay(Request $request){
+            $rules =array(
+             );
+             $validator= Validator::make($request->all(),$rules);
+             if($validator->fails()){
+                 return $validator->errors();
+             }
+             else{
+                $tip = Tip::inRandomOrder()->first();
+                $question = GQuestion::inRandomOrder()->first();
+                $temp1 = new QuestionDay();
+                $temp1->question = $question->qid;
+                $temp1->save();
+                $temp2 = new TipDay();
+                $temp2->tip = $tip->id;
+                $temp2->save();
+            return response(["status" => true, "message" =>"Custom Package Success"], 200);
+            }     
+        }
+        function getDayQuestion(Request $request){
+            $rules =array(
+             );
+             $validator= Validator::make($request->all(),$rules);
+             if($validator->fails()){
+                 return $validator->errors();
+             }
+             else{
+                $temp = QuestionDay::get()->last();
+                $question = GQuestion::where('qid',$temp->question)->first();
+            return response(["status" => true, "message" =>"Question Of the Day","data"=> $question], 200);
+            }     
+        }
+        function getPreviousAnswer(Request $request){
+            $rules =array(
+             );
+             $validator= Validator::make($request->all(),$rules);
+             if($validator->fails()){
+                 return $validator->errors();
+             }
+             else{
+                $tempz = QuestionDay::orderBy('id', 'desc')->skip(1)->take(1)->first();
+                $question = GQuestion::where('qid',$tempz->question)->first();
+                $temp = array();
+                    $option = QuestionOption::where('qid',$question->qid)->get();
+                    $temp1 = array();
+                    foreach($option as $value){
+                    $temp1[] = array([
+                        "option_id"=>$value->oid,
+                        "option" =>$value->q_option,
+                        "is_correct"=> $value->score
+                    ]);
+                    }
+                    $temp[] = array('question'=> $question,"option"=>$temp1);
+                return response(["status" => true, "question" =>$temp], 201);
+                 }
+        }
+        function getDayTip(Request $request){
+            $rules =array(
+             );
+             $validator= Validator::make($request->all(),$rules);
+             if($validator->fails()){
+                 return $validator->errors();
+             }
+             else{
+                $temp = TipDay::get()->last();
+                $question = Tip::where('id',$temp->tip)->first();
+            return response(["status" => true, "message" =>"Tip Of the Day","data"=> $question], 200);
+            }     
         }
 }
