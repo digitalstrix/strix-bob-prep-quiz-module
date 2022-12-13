@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Courses;
+use App\Models\Flashcard;
+use App\Models\FormulaTips;
+use App\Models\Foundations;
 use App\Models\GQuestion;
 use App\Models\OptionSelected;
 use App\Models\Question;
@@ -26,17 +29,77 @@ class QuestionController extends Controller
 {
     function getcategory(Request $request){
         $rules =array(
-            "user_id" => "required",
+            // "user_id" => "required",
          );
          $validator= Validator::make($request->all(),$rules);
          if($validator->fails()){
              return $validator->errors();
          }
          else{
-            if(!User::where('id',$request->user_id)->first()){
-                return response(["status" => "error", "message" =>"User Type is not Define"], 401);
-            }
+            // if(!User::where('id',$request->user_id)->first()){
+            //     return response(["status" => "error", "message" =>"User Type is not Define"], 401);
+            // }
             $data = QuestionCategory::get();
+            if($data)
+            return response(["status" => true, "data" =>$data], 201);
+            }
+    }
+    function getflashcard(Request $request){
+        $rules =array(
+            "category_id" => "required",
+         );
+         $validator= Validator::make($request->all(),$rules);
+         if($validator->fails()){
+             return $validator->errors();
+         }
+         else{
+            // if(!User::where('id',$request->user_id)->first()){
+            //     return response(["status" => "error", "message" =>"User Type is not Define"], 401);
+            // }
+            $temp[] = array();
+            $data = Flashcard::where('sid',$request->category_id)->get();
+            foreach ($data as $key => $val){
+                $question = Question::where('qid',$val->qid)->first();
+                // $temp = array();
+                    $option = QuestionOption::where('qid',$question->qid)->get();
+                    $temp1 = array();
+                    foreach($option as $value){
+                    $temp1[] = array([
+                        "option_id"=>$value->oid,
+                        "option" =>$value->q_option,
+                        "is_correct"=> $value->score
+                    ]);
+                    }
+                $temp[] = array('flashcard'=>$val,'question'=> $question,"option"=>$temp1);
+            }
+            if($temp)
+            return response(["status" => true, "data" =>$temp], 201);
+            }
+    }
+    function getformulatips(Request $request){
+        $rules =array(
+            "category_id" => "required",
+         );
+         $validator= Validator::make($request->all(),$rules);
+         if($validator->fails()){
+             return $validator->errors();
+         }
+         else{  
+            $data = FormulaTips::where('sid',$request->category_id)->get();
+            if($data)
+            return response(["status" => true, "data" =>$data], 201);
+            }
+    }
+    function getFoundation(Request $request){
+        $rules =array(
+            "category_id" => "required",
+         );
+         $validator= Validator::make($request->all(),$rules);
+         if($validator->fails()){
+             return $validator->errors();
+         }
+         else{  
+            $data = Foundations::where('sid',$request->category_id)->get();
             if($data)
             return response(["status" => true, "data" =>$data], 201);
             }
